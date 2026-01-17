@@ -29,48 +29,7 @@ const QRScanner = () => {
     setIsLoading(false);
   }, [searchParams]);
 
-  const renderDataField = (key, value, level = 0) => {
-    const indentClass = level > 0 ? `ml-${level * 4}` : '';
-    
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      return (
-        <div key={key} className={`${indentClass} mb-2`}>
-          <h3 className="font-semibold text-gray-800 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
-          <div className="ml-4 border-l-2 border-gray-200 pl-3">
-            {Object.entries(value).map(([subKey, subValue]) => 
-              renderDataField(subKey, subValue, level + 1)
-            )}
-          </div>
-        </div>
-      );
-    } else if (Array.isArray(value)) {
-      return (
-        <div key={key} className={`${indentClass} mb-2`}>
-          <h3 className="font-semibold text-gray-800 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
-          <ul className="list-disc ml-5 text-gray-700">
-            {value.map((item, index) => (
-              <li key={index}>{typeof item === 'object' ? JSON.stringify(item) : String(item)}</li>
-            ))}
-          </ul>
-        </div>
-      );
-    } else {
-      return (
-        <div key={key} className={`${indentClass} mb-2 grid grid-cols-12 gap-2`}>
-          <div className="col-span-4">
-            <span className="font-medium text-gray-700 capitalize">
-              {key.replace(/([A-Z])/g, ' $1').trim()}:
-            </span>
-          </div>
-          <div className="col-span-8">
-            <span className="text-gray-900 break-words">
-              {String(value)}
-            </span>
-          </div>
-        </div>
-      );
-    }
-  };
+
 
   if (isLoading) {
     return (
@@ -142,10 +101,150 @@ const QRScanner = () => {
               </p>
             </div>
             
-            <div className="space-y-6">
-              {Object.entries(decodedData).map(([key, value]) => 
-                renderDataField(key, value)
-              )}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Profile Section */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Profile Information
+                  </h2>
+                  <div className="space-y-3">
+                    {decodedData.name && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Name:</span>
+                        <span className="text-gray-900">{decodedData.name}</span>
+                      </div>
+                    )}
+                    {decodedData.email && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Email:</span>
+                        <span className="text-gray-900">{decodedData.email}</span>
+                      </div>
+                    )}
+                    {decodedData.phone && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Phone:</span>
+                        <span className="text-gray-900">{decodedData.phone}</span>
+                      </div>
+                    )}
+                    {decodedData.id && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">ID:</span>
+                        <span className="text-gray-900">{decodedData.id}</span>
+                      </div>
+                    )}
+                    {decodedData.isActive !== undefined && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Status:</span>
+                        <span className={`font-medium ${decodedData.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                          {decodedData.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Work Information */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    Work Information
+                  </h2>
+                  <div className="space-y-3">
+                    {decodedData.company && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Company:</span>
+                        <span className="text-gray-900">{decodedData.company}</span>
+                      </div>
+                    )}
+                    {decodedData.position && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Position:</span>
+                        <span className="text-gray-900">{decodedData.position}</span>
+                      </div>
+                    )}
+                    {decodedData.department && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Department:</span>
+                        <span className="text-gray-900">{decodedData.department}</span>
+                      </div>
+                    )}
+                    {decodedData.startDate && (
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-600">Start Date:</span>
+                        <span className="text-gray-900">{decodedData.startDate}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Address Information */}
+                {decodedData.address && (
+                  <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                      Address Information
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {decodedData.address.street && (
+                        <div className="flex justify-between border-b pb-2">
+                          <span className="font-medium text-gray-600">Street:</span>
+                          <span className="text-gray-900">{decodedData.address.street}</span>
+                        </div>
+                      )}
+                      {decodedData.address.city && (
+                        <div className="flex justify-between border-b pb-2">
+                          <span className="font-medium text-gray-600">City:</span>
+                          <span className="text-gray-900">{decodedData.address.city}</span>
+                        </div>
+                      )}
+                      {decodedData.address.state && (
+                        <div className="flex justify-between border-b pb-2">
+                          <span className="font-medium text-gray-600">State:</span>
+                          <span className="text-gray-900">{decodedData.address.state}</span>
+                        </div>
+                      )}
+                      {decodedData.address.zip && (
+                        <div className="flex justify-between border-b pb-2">
+                          <span className="font-medium text-gray-600">ZIP:</span>
+                          <span className="text-gray-900">{decodedData.address.zip}</span>
+                        </div>
+                      )}
+                      {decodedData.address.country && (
+                        <div className="flex justify-between border-b pb-2">
+                          <span className="font-medium text-gray-600">Country:</span>
+                          <span className="text-gray-900">{decodedData.address.country}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Additional fields that don't fit in the predefined sections */}
+              {Object.entries(decodedData).filter(([key]) => 
+                !['id', 'name', 'email', 'phone', 'address', 'company', 'position', 'department', 'startDate', 'isActive'].includes(key)
+              ).map(([key, value]) => (
+                <div key={key} className="mt-6 bg-gray-50 p-4 rounded-lg">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4 capitalize">
+                    {key.replace(/([A-Z])/g, ' $1').trim()} Information
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="font-medium text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                      <span className="text-gray-900">{String(value)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           
