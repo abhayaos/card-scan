@@ -9,15 +9,23 @@ const QRScanner = () => {
   
   useEffect(() => {
     // Get the QR code data from URL parameter
-    const qrData = searchParams.get('data');
+    const qrDataParam = searchParams.get('data');
     
-    if (qrData) {
+    if (qrDataParam) {
       try {
-        // Decode the URI-encoded JSON string
-        const decodedJson = decodeURIComponent(qrData);
-        // Parse the JSON to get the user data
-        const userData = JSON.parse(decodedJson);
-        setDecodedData(userData);
+        // Decode the URI-encoded string
+        const decodedText = decodeURIComponent(qrDataParam);
+        
+        // Check if it's JSON format or plain text format
+        if (decodedText.startsWith('{')) {
+          // It's JSON format
+          const userData = JSON.parse(decodedText);
+          setDecodedData(userData);
+        } else {
+          // It's plain text format, parse it
+          const parsedData = parsePlainTextQRData(decodedText);
+          setDecodedData(parsedData);
+        }
       } catch (error) {
         console.error('Error decoding QR data:', error);
         setDecodedData({ error: 'Invalid QR code data' });
@@ -28,6 +36,53 @@ const QRScanner = () => {
     
     setIsLoading(false);
   }, [searchParams]);
+  
+  // Function to parse plain text QR data into structured object
+  const parsePlainTextQRData = (text) => {
+    const lines = text.split('\n');
+    const result = {};
+    let currentObj = result;
+    let currentPrefix = '';
+    
+    for (let line of lines) {
+      line = line.trim();
+      if (!line) continue;
+      
+      // Check if it's a section header (ends with colon)
+      if (line.endsWith(':') && !line.includes(': ')) {
+        continue; // Skip section headers
+      }
+      
+      // Check if it's a field entry
+      const colonIndex = line.indexOf(': ');
+      if (colonIndex !== -1) {
+        let key = line.substring(0, colonIndex).trim();
+        let value = line.substring(colonIndex + 2).trim();
+        
+        // Convert key to camelCase
+        key = key.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).replace(/\s+/g, '');
+        key = key.charAt(0).toLowerCase() + key.slice(1);
+        
+        // Try to parse as JSON if it looks like it could be
+        if (value.startsWith('{') && value.endsWith('}')) {
+          try {
+            currentObj[key] = JSON.parse(value);
+          } catch {
+            currentObj[key] = value;
+          }
+        } else {
+          // Convert to appropriate type
+          if (value.toLowerCase() === 'true') value = true;
+          else if (value.toLowerCase() === 'false') value = false;
+          else if (!isNaN(value) && !isNaN(parseFloat(value))) value = parseFloat(value);
+          
+          currentObj[key] = value;
+        }
+      }
+    }
+    
+    return result;
+  };
 
 
 
@@ -72,8 +127,8 @@ const QRScanner = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-                <svg className="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+                <svg className="w-6 h-6 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                 </svg>
                 Scanned QR Code Information
@@ -89,95 +144,95 @@ const QRScanner = () => {
               </button>
             </div>
             
-            <div className="border-2 border-dashed border-green-300 rounded-lg p-6 mb-6 bg-green-50">
+            <div className="border-2 border-dashed border-green-300 rounded-lg p-6 mb-8 bg-green-50">
               <div className="flex items-center text-green-700 mb-2">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span className="font-medium">QR Code Successfully Scanned</span>
+                <h2 className="text-xl font-semibold">QR Code Successfully Scanned</h2>
               </div>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-700 text-base ml-8">
                 The QR code has been successfully decoded. All user information is displayed below.
               </p>
             </div>
             
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Profile Section */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <svg className="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                     Profile Information
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-5">
                     {decodedData.name && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Name:</span>
-                        <span className="text-gray-900">{decodedData.name}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Name</h3>
+                        <p className="text-lg text-gray-900 font-medium">{decodedData.name}</p>
                       </div>
                     )}
                     {decodedData.email && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Email:</span>
-                        <span className="text-gray-900">{decodedData.email}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Email</h3>
+                        <p className="text-base text-gray-900 break-all">{decodedData.email}</p>
                       </div>
                     )}
                     {decodedData.phone && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Phone:</span>
-                        <span className="text-gray-900">{decodedData.phone}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Phone</h3>
+                        <p className="text-base text-gray-900">{decodedData.phone}</p>
                       </div>
                     )}
                     {decodedData.id && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">ID:</span>
-                        <span className="text-gray-900">{decodedData.id}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">ID</h3>
+                        <p className="text-base text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded inline-block">{decodedData.id}</p>
                       </div>
                     )}
                     {decodedData.isActive !== undefined && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Status:</span>
-                        <span className={`font-medium ${decodedData.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Status</h3>
+                        <p className={`text-base font-semibold ${decodedData.isActive ? 'text-green-600' : 'text-red-600'}`}>
                           {decodedData.isActive ? 'Active' : 'Inactive'}
-                        </span>
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
                 
                 {/* Work Information */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-100">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <svg className="w-6 h-6 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
                     Work Information
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-5">
                     {decodedData.company && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Company:</span>
-                        <span className="text-gray-900">{decodedData.company}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Company</h3>
+                        <p className="text-base text-gray-900">{decodedData.company}</p>
                       </div>
                     )}
                     {decodedData.position && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Position:</span>
-                        <span className="text-gray-900">{decodedData.position}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Position</h3>
+                        <p className="text-base text-gray-900">{decodedData.position}</p>
                       </div>
                     )}
                     {decodedData.department && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Department:</span>
-                        <span className="text-gray-900">{decodedData.department}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Department</h3>
+                        <p className="text-base text-gray-900">{decodedData.department}</p>
                       </div>
                     )}
                     {decodedData.startDate && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="font-medium text-gray-600">Start Date:</span>
-                        <span className="text-gray-900">{decodedData.startDate}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Start Date</h3>
+                        <p className="text-base text-gray-900">{decodedData.startDate}</p>
                       </div>
                     )}
                   </div>
@@ -185,43 +240,43 @@ const QRScanner = () => {
                 
                 {/* Address Information */}
                 {decodedData.address && (
-                  <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                      <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <div className="md:col-span-2 bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-100">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                      <svg className="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                       </svg>
                       Address Information
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {decodedData.address.street && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="font-medium text-gray-600">Street:</span>
-                          <span className="text-gray-900">{decodedData.address.street}</span>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Street</h3>
+                          <p className="text-base text-gray-900">{decodedData.address.street}</p>
                         </div>
                       )}
                       {decodedData.address.city && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="font-medium text-gray-600">City:</span>
-                          <span className="text-gray-900">{decodedData.address.city}</span>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">City</h3>
+                          <p className="text-base text-gray-900">{decodedData.address.city}</p>
                         </div>
                       )}
                       {decodedData.address.state && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="font-medium text-gray-600">State:</span>
-                          <span className="text-gray-900">{decodedData.address.state}</span>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">State</h3>
+                          <p className="text-base text-gray-900">{decodedData.address.state}</p>
                         </div>
                       )}
                       {decodedData.address.zip && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="font-medium text-gray-600">ZIP:</span>
-                          <span className="text-gray-900">{decodedData.address.zip}</span>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">ZIP Code</h3>
+                          <p className="text-base text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded inline-block">{decodedData.address.zip}</p>
                         </div>
                       )}
                       {decodedData.address.country && (
-                        <div className="flex justify-between border-b pb-2">
-                          <span className="font-medium text-gray-600">Country:</span>
-                          <span className="text-gray-900">{decodedData.address.country}</span>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">Country</h3>
+                          <p className="text-base text-gray-900">{decodedData.address.country}</p>
                         </div>
                       )}
                     </div>
@@ -233,14 +288,14 @@ const QRScanner = () => {
               {Object.entries(decodedData).filter(([key]) => 
                 !['id', 'name', 'email', 'phone', 'address', 'company', 'position', 'department', 'startDate', 'isActive'].includes(key)
               ).map(([key, value]) => (
-                <div key={key} className="mt-6 bg-gray-50 p-4 rounded-lg">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-4 capitalize">
+                <div key={key} className="mt-8 bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-xl border border-amber-100">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6 capitalize">
                     {key.replace(/([A-Z])/g, ' $1').trim()} Information
                   </h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="font-medium text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                      <span className="text-gray-900">{String(value)}</span>
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                      <p className="text-base text-gray-900">{String(value)}</p>
                     </div>
                   </div>
                 </div>
@@ -248,14 +303,14 @@ const QRScanner = () => {
             </div>
           </div>
           
-          <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
-            <h3 className="font-semibold text-blue-800 mb-2 flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+            <h3 className="text-xl font-bold text-blue-800 mb-3 flex items-center">
+              <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
               Security Notice
             </h3>
-            <p className="text-blue-700 text-sm">
+            <p className="text-blue-700 text-base leading-relaxed">
               This QR code contains sanitized user information with sensitive data filtered out. 
               Passwords, tokens, API keys, and other sensitive information are not included in the QR code.
             </p>

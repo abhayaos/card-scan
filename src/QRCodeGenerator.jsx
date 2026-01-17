@@ -74,7 +74,8 @@ const QRCodeGenerator = () => {
 
   // Function to copy the scan URL to clipboard
   const copyScanUrl = () => {
-    const scanUrl = `${window.location.origin}/scan?data=${encodeURIComponent(JSON.stringify(userData))}`;
+    // Use the human-readable format for the URL
+    const scanUrl = `${window.location.origin}/scan?data=${encodeURIComponent(qrData)}`;
     navigator.clipboard.writeText(scanUrl);
     alert('Scan URL copied to clipboard!');
   };
@@ -142,8 +143,26 @@ const QRCodeGenerator = () => {
     );
   }
 
-  // Convert user data to JSON string for QR code
-  const qrData = JSON.stringify(userData, null, 2);
+  // Convert user data to a human-readable format for QR code
+  const formatUserDataForQR = (data) => {
+    let result = `USER INFORMATION\n\n`;
+    
+    const formatValue = (obj, prefix = '') => {
+      for (const [key, value] of Object.entries(obj)) {
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          result += `\n${prefix}${key.toUpperCase()}:\n`;
+          formatValue(value, prefix + '  ');
+        } else {
+          result += `${prefix}${key.toUpperCase()}: ${value}\n`;
+        }
+      }
+    };
+    
+    formatValue(userData);
+    return result.trim();
+  };
+  
+  const qrData = formatUserDataForQR(userData);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -195,7 +214,7 @@ const QRCodeGenerator = () => {
           User Data in QR Code:
         </h3>
         <div className="bg-white p-4 rounded-md overflow-x-auto max-h-60 overflow-y-auto">
-          <pre className="text-sm text-gray-700 whitespace-pre-wrap">{JSON.stringify(userData, null, 2)}</pre>
+          <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">{qrData}</pre>
         </div>
       </div>
       
