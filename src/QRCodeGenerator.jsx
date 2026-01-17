@@ -165,56 +165,53 @@ const QRCodeGenerator = () => {
   const qrData = formatUserDataForQR(userData);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">User QR Code</h2>
-        <p className="text-gray-600 mb-6">QR code containing sanitized user information</p>
+    <div className="max-w-5xl mx-auto">
+      <div className="bg-white p-8 mb-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-light text-gray-900 mb-3">Generated QR Code</h1>
+          <p className="text-gray-600">Secure QR code containing sanitized user information</p>
+        </div>
         
-        <div className="flex flex-col items-center">
-          <div className="bg-white p-6 rounded-lg shadow-inner border border-gray-200 mb-6">
-            <QRCodeCanvas
-              id="qrcode-canvas"
-              value={qrData}
-              size={256}
-              bgColor="#ffffff"
-              fgColor="#000000"
-              level="H"
-              includeMargin={true}
-            />
+        <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
+          <div className="flex-shrink-0">
+            <div className="bg-white p-8 border border-gray-200 rounded-xl">
+              <QRCodeCanvas
+                id="qrcode-canvas"
+                value={qrData}
+                size={280}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="H"
+                includeMargin={true}
+              />
+            </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-            <button 
-              onClick={downloadQRCode} 
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-md transition duration-200 flex items-center justify-center flex-1"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-              </svg>
-              Download QR Code
-            </button>
-            <button 
-              onClick={copyScanUrl} 
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-md transition duration-200 flex items-center justify-center flex-1"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-              </svg>
-              Copy Scan URL
-            </button>
+          <div className="flex-grow">
+            <div className="p-6 bg-gray-50 rounded-lg">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Actions</h2>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button 
+                  onClick={downloadQRCode} 
+                  className="bg-gray-900 hover:bg-black text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center flex-1"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  Download Image
+                </button>
+                <button 
+                  onClick={copyScanUrl} 
+                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center flex-1"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                  Copy Share URL
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      
-      <div className="bg-gray-50 rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-          User Data in QR Code:
-        </h3>
-        <div className="bg-white p-4 rounded-md overflow-x-auto max-h-60 overflow-y-auto">
-          <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">{qrData}</pre>
         </div>
       </div>
       
